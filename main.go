@@ -117,7 +117,7 @@ func watchSig(quit chan bool, sigchan chan os.Signal) {
 }
 
 func tweetSaver(filename string) (chan *twitterstream.Tweet, chan bool, error) {
-	tweets := make(chan *twitterstream.Tweet, 100) // buffered
+	tweets := make(chan *twitterstream.Tweet, 100) // buffered for slow writes
 	done := make(chan bool)
 
 	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
