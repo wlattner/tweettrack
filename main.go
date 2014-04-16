@@ -51,7 +51,7 @@ func init() {
 	flag.StringVar(&outputFileName, "output", "tweets.json", "location to save tweets")
 	flag.StringVar(&keywordFileName, "keyword_file", "", "location of file specifying keywords")
 	flag.StringVar(&keywordsCLI, "keywords", "", "comma separated list of keywords to track")
-	flag.StringVar(&port, "port", "3000", "port to listen on")
+	flag.StringVar(&port, "port", "", "port to listen on")
 	flag.BoolVar(&verbose, "verbose", false, "log tweets to stdout")
 	flag.Parse()
 
@@ -89,10 +89,11 @@ func main() {
 		log.Fatalf("error opening %v for writing", err)
 	}
 	subscribers = append(subscribers, saveChan)
-
 	// start web server
-	wsChan := startServer(port)
-	subscribers = append(subscribers, wsChan)
+	if port != "" {
+		wsChan := startServer(port)
+		subscribers = append(subscribers, wsChan)
+	}
 	// write tweets to command line
 	if verbose {
 		logChan := tweetLogger()
