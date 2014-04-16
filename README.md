@@ -8,7 +8,7 @@ Running
 
 Ensure your Twitter API keys are in `twitter_keys.cfg`. To run the app with the example keywords:
     
-    ./tweettrack --keyword_file keywords.txt
+    ./tweettrack --keyword_file keywords.txt --port 3000
 
 Then visit [http://localhost:3000](http://localhost:3000) in your browser.
 
