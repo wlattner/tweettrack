@@ -94,8 +94,10 @@ func main() {
 	wsChan := startServer(port)
 	subscribers = append(subscribers, wsChan)
 	// write tweets to command line
-	logChan := tweetLogger()
-	subscribers = append(subscribers, logChan)
+	if verbose {
+		logChan := tweetLogger()
+		subscribers = append(subscribers, logChan)
+	}
 	// connect to twitter api
 	tweets := connectStream(keywords, quit)
 	// connect save and server to tweet chan
