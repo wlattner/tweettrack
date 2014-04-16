@@ -183,6 +183,7 @@ func connectStream(keywords []string, quit chan bool) chan *twitterstream.Tweet 
 
 					log.Printf("waiting %d seconds before reconnect", wait)
 					time.Sleep(time.Duration(wait) * time.Second)
+					continue
 				} else {
 					wait = 1 // reset wait on successful connection
 				}
