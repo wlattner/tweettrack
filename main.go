@@ -37,6 +37,9 @@ var (
 
 	// port for webserver
 	port string
+
+	// log tweets to stdout
+	verbose bool
 )
 
 func init() {
@@ -49,6 +52,7 @@ func init() {
 	flag.StringVar(&keywordFileName, "keyword_file", "", "location of file specifying keywords")
 	flag.StringVar(&keywordsCLI, "keywords", "", "comma separated list of keywords to track")
 	flag.StringVar(&port, "port", "3000", "port to listen on")
+	flag.BoolVar(&verbose, "verbose", false, "log tweets to stdout")
 	flag.Parse()
 
 	// check args and settings
@@ -77,17 +81,25 @@ func main() {
 	signal.Notify(sigchan, os.Interrupt, os.Kill)
 	go watchSig(quit, sigchan)
 
+	subscribers := make([]chan *twitterstream.Tweet, 0)
+
 	// start file save goroutine
 	saveChan, saveDone, err := tweetSaver(outputFileName)
 	if err != nil {
 		log.Fatalf("error opening %v for writing", err)
 	}
+	subscribers = append(subscribers, saveChan)
+
 	// start web server
 	wsChan := startServer(port)
+	subscribers = append(subscribers, wsChan)
+	// write tweets to command line
+	logChan := tweetLogger()
+	subscribers = append(subscribers, logChan)
 	// connect to twitter api
 	tweets := connectStream(keywords, quit)
 	// connect save and server to tweet chan
-	broadcastTweets(tweets, saveChan, wsChan) // this will block until tweets is closed
+	broadcastTweets(tweets, subscribers...) // this will block until tweets is closed
 	// wait for save to complete
 	<-saveDone
 	// exit
@@ -119,6 +131,17 @@ func tweetSaver(filename string) (chan *twitterstream.Tweet, chan bool, error) {
 		close(done) // signal finished writing
 	}()
 	return tweets, done, nil
+}
+
+func tweetLogger() chan *twitterstream.Tweet {
+	tweets := make(chan *twitterstream.Tweet, 100)
+
+	go func() {
+		for tweet := range tweets {
+			log.Println(tweet.Text)
+		}
+	}()
+	return tweets
 }
 
 // send incoming tweets to one or more channels; slow client can block
